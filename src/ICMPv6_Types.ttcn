@@ -1,0 +1,311 @@
+/******************************************************************************
+* Copyright (c) 2007, 2014  Ericsson AB
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Contributors:
+*   Endre Kulcsar - initial implementation and initial documentation
+******************************************************************************/
+//
+//  File:               ICMPv6_Types.ttcn
+//  Rev:                R2A
+//  Prodnr:             CNL 113 631
+//  Reference:          RFC 4443 , RFC 4861
+
+module ICMPv6_Types {
+
+import from General_Types all;
+
+
+external function  f_enc_PDU_ICMPv6(
+in PDU_ICMPv6 pdu,
+in OCT16 srcaddr := '00000000000000000000000000000000'O, 
+in OCT16 dstaddr := '00000000000000000000000000000000'O
+) return octetstring
+
+external function f_dec_PDU_ICMPv6(in octetstring stream) return PDU_ICMPv6
+with { extension "prototype(convert)" extension "decode(RAW)" }
+
+external function f_ICMPv6_verify_checksum(
+in octetstring data,
+in OCT16 srcaddr := '00000000000000000000000000000000'O, 
+in OCT16 dstaddr := '00000000000000000000000000000000'O
+) return boolean
+
+//ICMPv6 messages======================================
+
+// RFC 4443 3.1
+type record ICMPv6_DestinationUnreachable
+{
+ INT1                   typeField (1), 
+ integer                code (0..6), 
+ OCT2                   checksum,
+ OCT4                   unused,
+ octetstring            originalIpMsg  
+} with {  
+  variant "PRESENCE (typeField = 1)";  
+};
+
+// RFC 4443 3.2
+type record ICMPv6_PacketTooBig 
+{
+ INT1                   typeField (2), 
+ integer                code (0), 
+ OCT2                   checksum, 
+ integer                mTU (0..4294967295),
+ octetstring            originalIpMsg 
+} with {  
+  variant "PRESENCE (typeField = 2)";
+  variant (mTU)   "FIELDLENGTH(32)";
+  variant (mTU)   "BYTEORDER(last)";
+};
+
+// RFC 4443 3.3 
+type record ICMPv6_TimeExceeded
+{
+ INT1                   typeField (3), 
+ integer                code (0..1), 
+ OCT2                   checksum, 
+ OCT4                   unused, //0 
+ octetstring            originalIpMsg   
+} with {  
+  variant "PRESENCE (typeField = 3)"; 
+}
+
+// RFC 4443 3.4
+type record ICMPv6_ParameterProblem 
+{
+ INT1                   typeField (4), 
+ integer                code (0..2), 
+ OCT2                   checksum,  
+ integer                pointer (0..4294967295), 
+ octetstring            originalIpMsg
+} with {  
+  variant "PRESENCE (typeField = 4)";
+  variant (pointer)   "FIELDLENGTH(32)";
+  variant (pointer)   "BYTEORDER(last)";  
+};
+
+// RFC 4443 3.5
+type record ICMPv6_EchoRequest
+{
+ INT1                   typeField (128), 
+ integer                code (0), 
+ OCT2                   checksum,  
+ integer                identifier (0..65535), 
+ integer                sequenceNr (0..65535), 
+ octetstring            data 
+} with {  
+  variant "PRESENCE (typeField = 128)";
+  variant (identifier) "FIELDLENGTH(16)";
+  variant (identifier) "BYTEORDER(last)";
+  variant (sequenceNr) "FIELDLENGTH(16)";
+  variant (sequenceNr) "BYTEORDER(last)"; 
+       
+};
+
+// RFC 4443 3.6
+type record ICMPv6_EchoReply
+{
+ INT1                   typeField (129), 
+ integer                code (0), 
+ OCT2                   checksum, 
+ integer                identifier (0..65535), 
+ integer                sequenceNr (0..65535),
+ octetstring            data  
+} with {  
+  variant "PRESENCE (typeField = 129)";
+  variant (identifier) "FIELDLENGTH(16)";
+  variant (identifier) "BYTEORDER(last)";
+  variant (sequenceNr) "FIELDLENGTH(16)";
+  variant (sequenceNr) "BYTEORDER(last)";      
+};
+
+// RFC 4861 4.1
+type record ICMPv6_RouterSolicitation
+{
+ INT1                   typeField (133),
+ integer                code (0),  
+ OCT2                   checksum,
+ OCT4                   reserved,  
+ Options                options optional 
+} with {  
+  variant "PRESENCE (typeField = 133)"; 
+}
+
+// RFC 4861 4.2
+type record ICMPv6_RouterAdvertisement
+{
+ INT1                   typeField (134),
+ integer                code (0),   
+ OCT2                   checksum, 
+ integer                curHopLimit,
+ BIT6                   reserved,
+ BIT1                   o_Bit,
+ BIT1                   m_Bit,
+ integer                routerLifetime,
+ integer                reachableTime,
+ integer                retransTimer,
+ Options                options optional  
+} with { 
+  variant "PRESENCE (typeField = 134)"; 
+  variant (routerLifetime) "FIELDLENGTH(16)";
+  variant (routerLifetime) "BYTEORDER(last)";
+  variant (reachableTime)  "FIELDLENGTH(32)";
+  variant (reachableTime)  "BYTEORDER(last)"; 
+  variant (retransTimer)    "FIELDLENGTH(32)";
+  variant (retransTimer)    "BYTEORDER(last)";     
+}  
+  
+// RFC 4861 4.3
+type record ICMPv6_NeighborSolicitation
+{
+ INT1                   typeField (135),
+ integer                code (0),   
+ OCT2                   checksum, 
+ OCT4                   reserved, 
+ OCT16                  targetAddress, 
+ Options                options optional    
+} with {  
+  variant "PRESENCE (typeField = 135)"; 
+}
+
+// RFC 4861 4.4
+type record ICMPv6_NeighborAdvertisement
+{
+ INT1                   typeField (136),
+ integer                code (0),   
+ OCT2                   checksum, 
+ BIT1                   r_Bit,                  
+ BIT1                   s_Bit,
+ BIT1                   o_bit,
+ bitstring              reserved length (29),
+ OCT16                  targetAddress, 
+ Options                options optional     
+} with {  
+  variant "PRESENCE (typeField = 136)"; 
+  variant (r_Bit,s_Bit,o_bit,reserved)"FIELDORDER(msb)"; 
+  variant (reserved) "FIELDLENGTH(29)";  
+}
+
+// RFC 4861 4.5
+type record ICMPv6_Redirect
+{
+ INT1                   typeField (137),
+ integer                code (0),   
+ OCT2                   checksum, 
+ OCT4                   reserved, 
+ OCT16                  targetAddress, 
+ OCT16                  destinationAddress,
+ Options                options optional   
+} with {  
+  variant "PRESENCE (typeField = 137)"; 
+}
+
+type record of OptionField Options
+
+type union OptionField
+{
+ SourceLinkLayerAddress   sourceLinkLayerAddress,
+ TargetLinkLayerAddress   targetLinkLayerAddress,  
+ PrefixInformation        prefixInformation,
+ RedirectedHeader         redirectedHeader,
+ MTU                      mTU
+}
+
+// RFC 4861 4.6.1
+type record SourceLinkLayerAddress
+{
+ INT1                   typeField (1),
+ LIN1                   lengthIndicator,
+ octetstring            linkLayerAddress  
+} with {   
+  variant "PRESENCE (typeField = 1)"; 
+  variant (lengthIndicator) "LENGTHTO(typeField,lengthIndicator,linkLayerAddress)";
+  variant (lengthIndicator) "UNIT(64)";
+  variant "PADDING(64)"
+}
+
+// RFC 4861 4.6.1
+type record TargetLinkLayerAddress
+{
+ INT1                   typeField (2),
+ LIN1                   lengthIndicator,
+ octetstring            linkLayerAddress   
+} with { 
+  variant "PRESENCE (typeField = 2)"; 
+  variant (lengthIndicator) "LENGTHTO(typeField,lengthIndicator,linkLayerAddress)";
+  variant (lengthIndicator) "UNIT(64)";
+  variant "PADDING(64)"
+}
+
+// RFC 4861 4.6.2
+type record PrefixInformation
+{
+ INT1                   typeField (3),
+ LIN1                   lengthIndicator,
+ INT1                   prefixLength, 
+ BIT6                   reserved1, 
+ BIT1                   a_Bit,
+ BIT1                   l_Bit,
+ integer                validLifetime,
+ integer                preferredLifetime,
+ OCT4                   reserved2,
+ OCT16                  prefix
+} with { 
+  variant "PRESENCE (typeField = 3)"; 
+  variant (lengthIndicator) "LENGTHTO(typeField,lengthIndicator,prefixLength,reserved1,a_Bit,l_Bit,validLifetime,preferredLifetime,reserved2,prefix)";
+  variant (lengthIndicator) "UNIT(64)";
+  variant (validLifetime) "FIELDLENGTH(32)";
+  variant (validLifetime) "BYTEORDER(last)";  
+  variant (preferredLifetime) "FIELDLENGTH(32)";
+  variant (preferredLifetime) "BYTEORDER(last)";    
+}
+
+// RFC 4861 4.6.3
+type record RedirectedHeader  
+{
+ INT1                   typeField (4),
+ LIN1                   lengthIndicator,
+ OCT6                   reserved,
+ OCT8                   iPHeader_and_Data
+} with { 
+  variant "PRESENCE (typeField = 4)"; 
+  variant (lengthIndicator) "LENGTHTO(typeField,lengthIndicator,reserved,iPHeader_and_Data)";
+  variant (lengthIndicator) "UNIT(64)";
+}
+
+// RFC 4861 4.6.4
+type record MTU  
+{
+ INT1                   typeField (5),
+ LIN1                   lengthIndicator,
+ OCT2                   reserved,    
+ integer                mTU_Value
+} with { 
+  variant "PRESENCE (typeField = 5)"; 
+  variant (lengthIndicator) "LENGTHTO(typeField,lengthIndicator,reserved,mTU_Value)";
+  variant (lengthIndicator) "UNIT(64)";
+  variant (mTU_Value) "FIELDLENGTH(32)";
+  variant (mTU_Value) "BYTEORDER(last)";     
+}
+
+
+type union PDU_ICMPv6
+{
+  ICMPv6_DestinationUnreachable          destinationUnreachable,
+  ICMPv6_PacketTooBig                    packetTooBig,
+  ICMPv6_TimeExceeded                    timeExceeded,
+  ICMPv6_ParameterProblem                parameterProblem,
+  ICMPv6_EchoRequest                     echoRequest,  
+  ICMPv6_EchoReply                       echoReply,
+  ICMPv6_RouterSolicitation              routerSolicitation,
+  ICMPv6_RouterAdvertisement             routerAdvertisement,
+  ICMPv6_NeighborSolicitation            neighborSolicitation,
+  ICMPv6_NeighborAdvertisement           neighborAdvertisement, 
+  ICMPv6_Redirect                        redirect 
+} with { variant""}
+
+} with{ encode "RAW"} 
