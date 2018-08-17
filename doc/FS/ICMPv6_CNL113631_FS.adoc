@@ -1,0 +1,111 @@
+---
+Author: János Kövesdi
+Version: 155 17-CNL 113 631, Rev. A
+Date: 2013-09-06
+
+---
+= ICMPv6 Protocol Modules for TTCN-3 Toolset with TITAN, Function Specification
+:author: János Kövesdi
+:revnumber: 155 17-CNL 113 631, Rev. A
+:revdate: 2013-09-06
+:toc:
+
+== How to Read This Document
+
+This is the Function Specification for the set of ICMPv6 protocol modules. ICMPv6 protocol modules are developed for the TTCN-3 Toolset with TITAN.
+
+== Scope
+
+The purpose of this document is to specify the content of the ICMPv6 protocol modules.
+
+= General
+
+Protocol modules implement the message structures of the related protocol in a formalized way, using the standard specification language TTCN-3. This allows defining of test data (templates) in the TTCN-3 language and correctly encoding/decoding messages when executing test suites using the TITAN TTCN-3 test environment.
+
+Protocol modules are using TITAN’s RAW encoding attributes <<_1, [1]>> and hence are usable with the TITAN test toolset only.
+
+= Functional Specification
+
+== Protocol Version Implemented
+
+This protocol module contains the protocol messages and elements of the ICMPv6 protocol (see <<_3, [3]>> and <<_4, [4]>>),
+
+[[modifications-deviations-related-to-the-protocol-specification]]
+== Modifications/Deviations Related to the Protocol Specification
+
+=== Implemented Messages
+
+All message types listed in protocol descriptions are implemented.
+
+[[protocol-modifications-deviations]]
+=== Protocol Modifications/Deviations
+
+None.
+
+[[encoding-decoding-and-other-related-functions]]
+== Encoding/Decoding and Other Related Functions
+
+This product also contains encoding/decoding functions that provide for the correct encoding of messages when sent from TITAN and correct decoding of messages when received by TITAN. The encoder updates the checksum field with the correct value. Implemented encoding/decoding functions:
+
+[cols=3*,options=header]
+|===
+
+|Name
+|Type of formal parameters
+|Type of return value
+
+|`f_enc_PDU_ICMPv6`
+|PDU_ICMPv6, OCT16, OCT16
+|octetstring
+
+|`f_dec_PDU_ICMPv6`
+|octetstring
+|PDU_ICMPv6
+|===
+
+There is also a function which verifies the `checksum` field in an encoded ICMPv6 message:
+
+[cols=3*,options=header]
+|===
+
+|Name
+|Type of formal parameters
+|Type of return value
+
+|`f_ICMPv6_verify_checksum`
+|octetstring, OCT16, OCT16
+|boolean
+|===
+
+= Terminology
+
+TITAN TTCN-3 Test Executor.
+
+= Abbreviations
+
+IETF:: Internet Engineering Task Force
+
+ICMPv6:: Internet Control Message Protocol for IPv6
+
+IPv6:: Internet Protocol Version 6
+
+RFC:: Request for Comments
+
+TTCN-3:: Testing and Test Control Notation version 3
+
+= References
+
+[[_1]]
+[1] Programmer’s Technical Reference for the TITAN TTCN-3 Test Executor
+
+[[_2]]
+[2] ETSI ES 201 873-1 v.3.1.1 (06/2005) +
+The Testing and Test Control Notation version 3. Part 1: Core Language
+
+[[_3]]
+[3] IETF https://tools.ietf.org/html/rfc4443[RFC 4443] +
+Internet Control Message Protocol (ICMPv6) for the Internet Protocol Version 6 (IPv6) Specification
+
+[[_4]]
+[4] IETF https://tools.ietf.org/html/rfc768[RFC 4861] +
+Neighbor Discovery for IP version 6 (IPv6)
